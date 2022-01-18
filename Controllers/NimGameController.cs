@@ -18,13 +18,8 @@ public class NimGameController : ControllerBase
 
     public IActionResult Post([FromBody] Nimput nimput)
     {
-        return Ok(nimput);
-    }
+        var choice = nimput.nim + nimput.choice % 4 != 0 ? 4 - (nimput.choice % 4) : Random.Shared.Next(1, 4);
 
-    [HttpGet]
-    public IActionResult Get()
-    {
-        _logger.LogInformation("NimGameController.Get()");
-        return Ok(new { nim = 3 });
+        return Ok(new { nim = nimput.nim + nimput.choice + choice, choice = choice });
     }
 }

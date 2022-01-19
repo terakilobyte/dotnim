@@ -16,10 +16,28 @@ public class NimGameController : ControllerBase
 
     [HttpPost]
 
-    public IActionResult Post([FromBody] Nimput nimput)
+    public IActionResult Post([FromBody] Nim nimput)
     {
-        var choice = nimput.nim + nimput.choice % 4 != 0 ? 4 - (nimput.choice % 4) : Random.Shared.Next(1, 4);
+        if (nimput.total >= 21)
+        {
+            return Ok(new Nim { gameOver = true, playerTurn = true, playerWon = false, total = nimput.total, choice = 0 });
+        }
+        else if (nimput.total == 20)
+        {
+            return Ok(new Nim { gameOver = true, playerTurn = true, playerWon = true, total = nimput.total + 1, choice = 1 });
+        }
+        else
+        {
+            var choice = nimput.total % 4 != 0 ? 4 - (nimput.total % 4) : Random.Shared.Next(1, 4);
 
-        return Ok(new { nim = nimput.nim + nimput.choice + choice, choice = choice });
+            return Ok(new { total = nimput.total + nimput.choice + choice, choice = choice, playerTurn = true, gameOver = false });
+
+        }
+    }
+
+    [HttpGet]
+    public IActionResult Get()
+    {
+        return Ok(new { total = 1, choice = 1 });
     }
 }

@@ -3,37 +3,34 @@ import React, { Component } from "react"
 export class Nim extends Component {
   static displayName = Nim.name
 
-  constructor(props) {
-    super(props)
-    this.state = { nim: 1, choice: 1, gameOver: false, playerTurn: true }
+  defaultState = {
+    total: 1,
+    choice: 1,
+    gameOver: false,
+    playerTurn: true,
+    playerWon: false,
   }
 
-  render() {
-    let turn = this.state.playerTurn ? "Your turn." : "Opponent's turn."
-    let choice = this.state.playerTurn
-      ? `Computer chose ${this.state.choice}.`
-      : `You chose ${this.state.choice}`
+  constructor(props) {
+    super(props)
+    this.state = { ...this.defaultState }
+  }
 
-    let gameOver = this.state.gameOver
-      ? this.state.playerTurn
-        ? "You win!"
-        : "You lose!"
-      : ""
+  reset() {
+    this.setState({ ...this.defaultState })
+  }
 
-    return (
-      <div>
-        <p>
-          The game "21" is played as a misère game with any number of players
-          who take turns saying a number. The first player says "1" and each
-          player in turn increases the number by 1, 2, or 3, but may not exceed
-          21; the player forced to say "21", or any greater value, loses.
-        </p>
-        <h1>Total: {this.state.nim}</h1>
-
-        <h2>{this.state.choice > 0 ? choice : ""} </h2>
-
-        <h2>{this.state.gameOver ? gameOver : turn}</h2>
-
+  buttonDisplay(gameOver) {
+    if (gameOver) {
+      return (
+        <div>
+          <button className="btn btn-primary" onClick={() => this.reset()}>
+            Reset
+          </button>
+        </div>
+      )
+    } else {
+      return (
         <div className="button-row">
           <button className="btn btn-primary" onClick={() => this.getNim(1)}>
             1
@@ -45,39 +42,61 @@ export class Nim extends Component {
             3
           </button>
         </div>
+      )
+    }
+  }
+
+  render() {
+    let turn = this.state.playerTurn ? "Your turn." : "Opponent's turn."
+    let choice = this.state.playerTurn
+      ? `Computer chose ${this.state.choice}.`
+      : `You chose ${this.state.choice}`
+
+    let gameOver = this.state.gameOver
+      ? this.state.playerWon
+        ? "You win!"
+        : "You lose!"
+      : ""
+
+    return (
+      <div>
+        <h1>Total: {this.state.total}</h1>
+
+        <h2>{this.state.choice > 0 ? choice : ""} </h2>
+        <h2>{this.state.gameOver ? gameOver : turn}</h2>
+        <p>
+          The game "21" is played as a misère game with any number of players
+          who take turns saying a number. The first player says "1" and each
+          player in turn increases the number by 1, 2, or 3, but may not exceed
+          21; the player forced to say "21", or any greater value, loses.
+        </p>
+        {this.buttonDisplay(this.state.gameOver)}
       </div>
     )
   }
 
   async getNim(choice = 0) {
-    if (choice === 0) {
+    if (!this.state.playerTurn) {
       return
     }
 
     this.setState({
       playerTurn: !this.state.playerTurn,
       choice,
-      nim: this.state.nim + choice,
+      total: this.state.total + choice,
     })
-
-    if (this.state.playerTurn && choice + this.state.nim >= 21) {
-      this.setState({ gameOver: true })
-      return
-    }
 
     const response = await fetch("api/nimgame", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ nim: this.state.nim, choice }),
+      body: JSON.stringify({ total: this.state.total + choice }),
     })
     const data = await response.json()
     setTimeout(() => {
       this.setState({
         ...data,
-        loading: false,
-        playerTurn: !this.state.playerTurn,
       })
     }, 1500)
   }
